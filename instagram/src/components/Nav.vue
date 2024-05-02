@@ -2,16 +2,23 @@
 import { RouterLink, useRouter } from "vue-router";
 import Containers from "./Containers.vue";
 import { ref } from "vue";
+import { useUserStore } from "@/stores/users";
 import AuthModal from "./AuthModel.vue";
-const router = useRouter()
+import { storeToRefs } from "pinia";
+const router = useRouter();
+const userStores = useUserStore();
+const { user, loadingUser } = storeToRefs(userStores);
 const searchUsername = ref("");
 const onSearch = () => {
-  if(searchUsername.value){
-      router.push(`/profile/${searchUsername.value}`)
-      searchUsername.value = ""
+  if (searchUsername.value) {
+    router.push(`/profile/${searchUsername.value}`);
+    searchUsername.value = "";
   }
 };
-const isAuth = ref(false);
+const handleLogout = async () => {
+  await userStores.handleLogout();
+};
+//
 </script>
 
 <template>
@@ -21,7 +28,6 @@ const isAuth = ref(false);
         <div class="nav-container">
           <div class="right-container">
             <RouterLink to="/">Instagram</RouterLink>
-
             <a-input-search
               v-model:value="searchUsername"
               placeholder="username..."
@@ -29,13 +35,15 @@ const isAuth = ref(false);
               @search="onSearch"
             />
           </div>
-          <div class="left-container" v-if="!isAuth">
-            <AuthModal :isLogin="false" />
-            <AuthModal :isLogin="true" />
-          </div>
-          <div class="left-container" v-else>
-            <a-button type="primary">Profile</a-button>
-            <a-button type="primary">Log out</a-button>
+          <div class="content" v-if="!loadingUser">
+            <div class="left-container" v-if="!user">
+              <AuthModal :isLogin="false" />
+              <AuthModal :isLogin="true" />
+            </div>
+            <div class="left-container" v-else>
+              <a-button type="primary">Profile</a-button>
+              <a-button type="primary" @click="handleLogout">Log out</a-button>
+            </div>
           </div>
         </div>
       </Containers>
@@ -43,6 +51,10 @@ const isAuth = ref(false);
   </a-layout>
 </template>
 <style scoped>
+.content{
+  display: flex;
+  align-items: center;
+}
 .nav-container {
   display: flex;
   justify-content: space-between;
